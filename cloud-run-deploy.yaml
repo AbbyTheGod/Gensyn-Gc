@@ -1,0 +1,61 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: gensyn-swarm-node
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/execution-environment: gen2
+    run.googleapis.com/cpu-throttling: "false"
+    run.googleapis.com/startup-cpu-boost: "true"
+    run.googleapis.com/max-instances: "1"
+    run.googleapis.com/min-instances: "1"
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/cpu: "8"
+        run.googleapis.com/memory: "32Gi"
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/vpc-access-connector: ""
+        run.googleapis.com/vpc-access-egress: all
+    spec:
+      containerConcurrency: 1
+      timeoutSeconds: 3600
+      containers:
+      - image: gcr.io/PROJECT_ID/gensyn-swarm-node:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: NODE_ID
+          value: "gensyn-cloud-run-node"
+        - name: MAX_WORKERS
+          value: "4"
+        - name: MEMORY_LIMIT
+          value: "28GB"
+        - name: CPU_LIMIT
+          value: "8"
+        - name: RAY_DISABLE_IMPORT_WARNING
+          value: "1"
+        resources:
+          limits:
+            cpu: "8"
+            memory: "32Gi"
+          requests:
+            cpu: "4"
+            memory: "16Gi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3 

@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  gensyn-rl-swarm:
+    build: .
+    container_name: gensyn-rl-swarm
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ID=gensyn-rl-swarm-local
+      - MAX_WORKERS=4
+      - MEMORY_LIMIT=8GB
+      - CPU_LIMIT=8
+      - NODE_ENV=production
+      - PYTHONPATH=/app
+    volumes:
+      - ./logs:/app/logs
+      - ./models:/app/models
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 28G
+          cpus: '7.0'
+        reservations:
+          memory: 16G
+          cpus: '4.0' 
