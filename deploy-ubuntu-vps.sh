@@ -47,9 +47,27 @@ apt-get install -y \
 
 # Install Python 3.11
 echo -e "${YELLOW}🐍 Installing Python 3.11...${NC}"
-add-apt-repository ppa:deadsnakes/ppa -y
-apt-get update
-apt-get install -y python3.11 python3.11-pip python3.11-venv python3.11-dev
+UBUNTU_VERSION=$(lsb_release -cs)
+
+# Check if deadsnakes PPA is available for this Ubuntu version
+if curl -s "https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu/dists/$UBUNTU_VERSION/" | grep -q "Release"; then
+    echo -e "${GREEN}✅ DeadSnakes PPA available for $UBUNTU_VERSION${NC}"
+    add-apt-repository ppa:deadsnakes/ppa -y
+    apt-get update
+    apt-get install -y python3.11 python3.11-pip python3.11-venv python3.11-dev
+else
+    echo -e "${YELLOW}⚠️ DeadSnakes PPA not available for $UBUNTU_VERSION, using system Python${NC}"
+    # Install Python 3.11 from system repositories or use available version
+    if apt-cache search python3.11 | grep -q python3.11; then
+        apt-get install -y python3.11 python3.11-pip python3.11-venv python3.11-dev
+    else
+        echo -e "${YELLOW}⚠️ Python 3.11 not available, using Python 3.10${NC}"
+        apt-get install -y python3.10 python3.10-pip python3.10-venv python3.10-dev
+        # Create symlink for python3.11
+        ln -sf /usr/bin/python3.10 /usr/bin/python3.11
+        ln -sf /usr/bin/pip3.10 /usr/bin/pip3.11
+    fi
+fi
 
 # Install Node.js 18
 echo -e "${YELLOW}📦 Installing Node.js 18...${NC}"
